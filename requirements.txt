@@ -4,3 +4,5 @@ numpy>=2.3
 scipy>=1.16
 pyttsx3>=2.98
 requests>=2.32.3
+fastapi>=0.162.0
+uvicorn[standard]>=0.54.0
