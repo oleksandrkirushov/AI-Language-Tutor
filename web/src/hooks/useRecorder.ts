@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import workletUrl from './recorder-worklet.ts?worker&url'
-import { CALIBRATION_SECONDS, SilenceDetector, calibrateThreshold } from './silenceDetector.ts'
-import { toWav } from './wav.ts'
+import workletUrl from '../audio/recorder-worklet.ts?worker&url'
+import { CALIBRATION_SECONDS, SilenceDetector, calibrateThreshold } from '../audio/silenceDetector.ts'
+import { toWav } from '../audio/wav.ts'
 
 export type MicState = 'off' | 'starting' | 'calibrating' | 'on'
 

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { transcribeAudio } from './api.ts'
+import { transcribeAudio } from '../services/api.ts'
 import { useRecorder } from './useRecorder.ts'
 import { useSpaceKey } from './useSpaceKey.ts'
 

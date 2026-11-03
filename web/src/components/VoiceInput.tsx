@@ -1,4 +1,4 @@
-import { useVoiceInput } from './useVoiceInput.ts'
+import { useVoiceInput } from '../hooks/useVoiceInput.ts'
 
 function VoiceInput() {
   const { micState, appState, transcript, notice, error, enableMicrophone, toggleRecording } =

@@ -19,5 +19,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/recorder-worklet.ts"]
+  "include": ["src/audio/recorder-worklet.ts"]
 }

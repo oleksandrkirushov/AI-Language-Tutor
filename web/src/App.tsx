@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { type ServerStatus, useServerStatus } from './useServerStatus.ts'
-import VoiceInput from './VoiceInput.tsx'
+import { type ServerStatus, useServerStatus } from './hooks/useServerStatus.ts'
+import VoiceInput from './components/VoiceInput.tsx'
 
 const STATUS_TEXT: Record<ServerStatus, { title: string; hint: ReactNode }> = {
   checking: {
