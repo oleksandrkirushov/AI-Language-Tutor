@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { type ServerStatus, useServerStatus } from './hooks/useServerStatus.ts'
-import VoiceInput from './components/VoiceInput.tsx'
+import Conversation from './components/Conversation.tsx'
 
 const STATUS_TEXT: Record<ServerStatus, { title: string; hint: ReactNode }> = {
   checking: {
@@ -43,7 +43,7 @@ function App() {
           {hint && <p className="status-hint">{hint}</p>}
         </div>
       </div>
-      <VoiceInput />
+      <Conversation />
     </main>
   )
 }

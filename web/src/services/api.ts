@@ -50,7 +50,7 @@ async function readErrorMessage(response: Response): Promise<string> {
   } catch {
     // The body isn't JSON, for example when the proxy can't reach the server
   }
-  return `The server responded with status ${response.status}`
+  return 'Could not reach the server.'
 }
 
 export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
