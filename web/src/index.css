@@ -97,19 +97,12 @@ code {
   font-weight: 500;
 }
 
-.recording-test {
+.voice-input {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
   margin-top: 32px;
-}
-
-h2 {
-  margin: 0;
-  color: var(--text-strong);
-  font-size: 18px;
-  font-weight: 600;
 }
 
 button {
@@ -133,11 +126,7 @@ button:disabled {
   cursor: default;
 }
 
-audio {
-  width: 100%;
-}
-
-.recognized-text {
+.transcript {
   color: var(--text-strong);
 }
 

@@ -1,6 +1,6 @@
 // Runs on the audio thread and sends the microphone samples to useRecorder in batches
 
-const BATCH_FRAMES = 2048
+const BATCH_FRAMES = 512 // small, so little audio is lost when recording stops mid-batch
 
 class RecorderProcessor extends AudioWorkletProcessor {
   private batch = new Float32Array(BATCH_FRAMES)
