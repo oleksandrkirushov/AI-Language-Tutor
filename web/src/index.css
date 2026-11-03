@@ -96,3 +96,51 @@ code {
   color: var(--text-strong);
   font-weight: 500;
 }
+
+.recording-test {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--neutral);
+}
+
+button:disabled {
+  color: var(--text);
+  cursor: default;
+}
+
+audio {
+  width: 100%;
+}
+
+.recognized-text {
+  color: var(--text-strong);
+}
+
+.error {
+  color: var(--danger);
+}
