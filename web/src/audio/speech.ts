@@ -1,7 +1,7 @@
 // Reads text aloud in the browser's system voices
 
-const TARGET_LANG = 'en'
-const NATIVE_LANG = 'uk'
+import type { Language } from '../languages.ts'
+
 const MAX_CHUNK_CHARS = 200 // Chrome can cut off long text in its network voices
 const VOICES_TIMEOUT_MS = 2000 // Chrome lists its network voices first and local ones later
 
@@ -25,7 +25,21 @@ const NOVELTY_VOICES = new Set([
 ])
 
 // The clearest of the voices macOS includes by default, best first
-const PREFERRED_VOICES = ['Samantha', 'Daniel', 'Karen', 'Moira', 'Tessa', 'Lesya']
+const PREFERRED_VOICES = [
+  'Samantha',
+  'Daniel',
+  'Karen',
+  'Moira',
+  'Tessa',
+  'Lesya',
+  'Mónica',
+  'Paulina',
+  'Anna',
+  'Thomas',
+  'Jacques',
+  'Alice',
+  'Zosia',
+]
 
 // Keeps utterances referenced while they play: Chrome can otherwise drop them and never fire "end"
 const activeUtterances = new Set<SpeechSynthesisUtterance>()
@@ -61,11 +75,15 @@ export function splitIntoChunks(text: string): string[] {
     .flatMap(splitLongSentence)
 }
 
-/** Chooses the language by which alphabet most of the letters are in. */
-export function chooseLanguage(chunk: string): string {
+/**
+ * Chooses the language by which alphabet most of the letters are in. Two languages that
+ * share an alphabet can't be told apart this way, so those pieces use the target language.
+ */
+export function chooseLanguage(chunk: string, target: Language, native: Language): string {
   const cyrillic = chunk.match(/\p{Script=Cyrillic}/gu)?.length ?? 0
   const latin = chunk.match(/\p{Script=Latin}/gu)?.length ?? 0
-  return cyrillic > latin ? NATIVE_LANG : TARGET_LANG
+  const script = cyrillic > latin ? 'Cyrillic' : 'Latin'
+  return native.script !== target.script && script === native.script ? native.code : target.code
 }
 
 /** Picks the best voice for a language, preferring ones that run on this computer. */
@@ -140,7 +158,12 @@ function speakChunk(
  * Reads text aloud one piece at a time, until it ends or the signal aborts.
  * Resolves to false if any piece could not be spoken.
  */
-export async function speakText(text: string, signal: AbortSignal): Promise<boolean> {
+export async function speakText(
+  text: string,
+  target: Language,
+  native: Language,
+  signal: AbortSignal,
+): Promise<boolean> {
   const synth = window.speechSynthesis
   if (!synth) {
     return false
@@ -154,7 +177,7 @@ export async function speakText(text: string, signal: AbortSignal): Promise<bool
     if (signal.aborted) {
       break
     }
-    const lang = chooseLanguage(chunk)
+    const lang = chooseLanguage(chunk, target, native)
     const utterance = new SpeechSynthesisUtterance(chunk)
     utterance.lang = lang
     utterance.voice = pickVoice(voices, lang) ?? null

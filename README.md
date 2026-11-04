@@ -1,71 +1,120 @@
 # Voice Language Tutor (local)
 
 You speak out loud in the language you are learning → the AI hears you, replies by voice
-and politely corrects your mistakes. Everything runs locally on your computer.
+and politely corrects your mistakes. It runs in your browser, and speech recognition and the
+language model run on your computer.
 
-Works on macOS and Linux. Windows isn't supported: keyboard input relies on the
-Unix-only `termios` module.
+<img src="docs/screenshots/conversation.png" alt="A conversation: the tutor replies to two spoken sentences and corrects their grammar" width="520">
+
+Tested in Chrome on macOS. Firefox, Safari, Linux and Windows haven't been tested yet.
 
 ## What it's made of
 
-- **faster-whisper** — recognizes your speech (speech-to-text), locally, no internet
+- **faster-whisper** — recognizes your speech (speech-to-text), locally
 - **Ollama** — a local language model that holds the conversation and corrects mistakes
-- **say** (macOS) / **pyttsx3** (Linux) — reads the reply aloud (text-to-speech), using the system voice
+- **The browser's speech synthesis** — reads the reply aloud in a system voice
+- **FastAPI** — the local server that connects these and serves the page
+- **React, TypeScript, Vite** — the web page
 
-## Step 1. Install Python
+## Setup
 
-If it isn't installed yet, download it from [python.org](https://www.python.org/downloads/)
-(version 3.10 or newer).
+You need [Python](https://www.python.org/downloads/) 3.10 or newer,
+[Node.js](https://nodejs.org) 20.19+ or 22.12+, and [Ollama](https://ollama.com).
 
-Check in the terminal:
-```
-python --version
-```
-
-## Step 2. Install Ollama and download a model
-
-1. Download Ollama from [ollama.com](https://ollama.com) and install it.
-2. Open a terminal and download the model:
+1. Download the language model (~4.7 GB, once). If your computer is less powerful, use a
+   smaller model such as `llama3.2` (~2 GB) and change `OLLAMA_MODEL` in `server.py`.
    ```
    ollama pull llama3.1
    ```
-   (this is ~4.7 GB and downloads once). If your computer is less powerful, you can use
-   a smaller model, for example `ollama pull llama3.2` (~2 GB).
-3. Make sure Ollama is running — it usually starts automatically
-   after installation. You can check with:
+2. Install the Python libraries, from the project folder:
    ```
-   ollama list
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. Build the web page:
+   ```
+   cd web
+   npm install
+   npm run build
+   cd ..
    ```
 
-## Step 3. Install the project dependencies
+Build the page again after changing anything in the `web` folder.
 
-Open a terminal in the project folder and run:
+## Run it
 
-```
-python -m venv venv
-```
+Make sure Ollama is running, then start the server from the project folder:
 
-Activating the virtual environment:
 ```
 source venv/bin/activate
+python server.py
 ```
 
-Installing the libraries:
+Open http://127.0.0.1:8000. The first start also downloads the Whisper model (~500 MB, once).
+
+## Using it
+
+1. Click **Turn on microphone** and allow access. Stay quiet for half a second while the page
+   measures background noise.
+
+   <img src="docs/screenshots/start.png" alt="The start screen: server status, settings and the Turn on microphone button" width="520">
+
+2. Press **Space** and speak. Recording stops after a pause, or right away if you press
+   **Space** again. If you say nothing for 8 seconds, the recording is cancelled.
+
+   <img src="docs/screenshots/listening.png" alt="Recording in progress: the settings are locked and the page says it is listening" width="520">
+
+3. Your words appear, then the tutor's reply, which is also read aloud. Press **Space** to stop
+   the voice.
+
+Recording stops at 60 seconds at most. The conversation is kept only until you reload the page.
+
+### Settings
+
+Settings are saved in your browser.
+
+| Setting | What it does |
+| --- | --- |
+| Learning | The language the tutor speaks with you |
+| Your language | The language it can use to explain mistakes |
+| Space key | **Press once**: recording ends after a pause. **Hold down**: recording lasts while you hold Space |
+| Pause to finish | How long a silence ends the recording, in **Press once** mode |
+
+Replies are read in the voice for the alphabet they're written in. If both of your languages use
+the same alphabet, such as English and Spanish, the whole reply is read in the voice of the
+language you're learning.
+
+### Privacy
+
+Your speech and the conversation stay on your computer. The exception is reading aloud if your
+system has no local voices: the browser may then use an online voice, which sends the reply's
+text to that voice's provider.
+
+## Developing the page
+
+Run the server and Vite's development server in two terminals. The page then updates as you edit:
+
 ```
-pip install -r requirements.txt
+python server.py
+```
+```
+cd web
+npm run dev
 ```
 
-> The first run of `main.py` will also automatically download the Whisper model
-> (the size depends on the `--whisper-size` parameter, "small" by default,
-> ~500 MB) — this happens once.
+Open http://localhost:5173.
 
-## Step 4. Run it
+## Console version
+
+`main.py` is the same tutor without the web page, for macOS and Linux. Run it in a regular terminal:
 
 ```
 python main.py --target English --native Ukrainian
 ```
 
-Parameters (all optional):
+Press **Space** to speak and `q` to quit. Optional parameters:
+
 - `--target` — the language you are learning (default "English")
 - `--native` — your native language (default "Ukrainian")
 - `--model` — Ollama model name (default "llama3.1")
@@ -74,43 +123,35 @@ Parameters (all optional):
 - `--max-duration` — maximum recording length in seconds (default 60)
 - `--threshold` — voice loudness threshold (determined automatically from background noise by default)
 
-Run it in a regular terminal, since the program reads keys directly from the keyboard.
-At startup it listens to background noise for half a second to set the loudness
-threshold, so stay quiet during that moment.
-
-In the program:
-1. Press **Space** and speak. You don't need to hold the key.
-2. Recording stops after a pause, or right away if you press **Space** again.
-   If you say nothing for 8 seconds, the recording is cancelled.
-3. The program recognizes your speech and replies in text and by voice.
-
-To quit, press `q`.
+On Linux, reading aloud uses `espeak`: `sudo apt install espeak`.
 
 ## Common problems
 
-**"Could not connect to Ollama"**
-→ Make sure Ollama is running. You can start it manually: `ollama serve` in a separate
-terminal, and leave it open.
+**"The web page isn't built yet", or the address shows `{"detail":"Not Found"}`**
+→ Build the page (Setup, step 3), then restart the server.
 
-**No sound / the voice doesn't read the reply (Linux)**
-→ pyttsx3 on Linux uses `espeak`. Install it:
-```
-sudo apt install espeak
-```
+**"Ollama isn't running"**
+→ Open the Ollama app, or run `ollama serve` in a separate terminal and leave it open.
 
-**The microphone doesn't record / sounddevice error**
-→ Check that the operating system has given the program (terminal/Python)
-access to the microphone in the privacy settings.
+**"The server isn't running"**
+→ This appears in development mode. Run `python server.py` in the project folder.
+
+**"Microphone access is blocked"**
+→ Allow the microphone in the browser's site settings, then click **Turn on microphone** again.
+If that doesn't help, also check your operating system's privacy settings for the browser.
 
 **Recording cuts off while you're thinking**
-→ Allow a longer pause, for example `--silence 3`.
+→ Choose a longer **Pause to finish**, or set **Space key** to **Hold down**.
 
-**Recording doesn't stop, or a quiet voice isn't picked up**
-→ Set the threshold manually. Raise it if background noise keeps the recording going
-(for example `--threshold 800`), and lower it if your voice isn't detected.
+**Recording doesn't stop**
+→ Background noise may sound like speech. Reload the page and keep quiet while it measures the
+noise, or set **Space key** to **Hold down**.
+
+**No voice for a language**
+→ Add that language's voice in your operating system's speech settings, then reload the page.
 
 **Whisper is slow**
-→ Use a smaller size: `--whisper-size tiny` or `--whisper-size base`.
+→ Use a smaller model: change `WHISPER_SIZE` in `server.py` to `tiny` or `base`.
 If you have an NVIDIA graphics card with CUDA, you can speed it up by changing
 `device="cpu"` to `device="cuda"` in the code (requires the CUDA toolkit to be installed).
 
@@ -120,6 +161,5 @@ If you have an NVIDIA graphics card with CUDA, you can speed it up by changing
   instead of a loudness threshold
 - A better voice using a local neural TTS (for example Piper) instead of
   the system voice
-- Windows support
 - Saving conversation history to a file to see your progress
 - Highlighting corrections in a separate color in the output
