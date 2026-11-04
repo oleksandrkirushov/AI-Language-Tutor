@@ -1,10 +1,14 @@
 import { useEffect } from 'react'
-import { useConversation } from '../hooks/useConversation.ts'
+import { type AppState, useConversation } from '../hooks/useConversation.ts'
 
 function Conversation() {
-  const { micState, appState, messages, notice, error, enableMicrophone, toggleRecording } =
+  const { micState, appState, messages, notice, error, enableMicrophone, handleAction } =
     useConversation()
   const isThinking = appState === 'thinking'
+  const actionLabels: Partial<Record<AppState, string>> = {
+    recording: 'Finish',
+    speaking: 'Stop speaking',
+  }
 
   // Keep the newest message in view, just above the controls
   useEffect(() => {
@@ -35,15 +39,16 @@ function Conversation() {
           <div className="controls-row">
             <button
               type="button"
-              onClick={toggleRecording}
-              disabled={appState !== 'idle' && appState !== 'recording'}
+              onClick={handleAction}
+              disabled={appState === 'transcribing' || isThinking}
             >
-              {appState === 'recording' ? 'Finish' : 'Start speaking'}
+              {actionLabels[appState] ?? 'Start speaking'}
             </button>
             <p role="status" data-state={appState}>
               {appState === 'idle' && 'Press Space and speak.'}
               {appState === 'recording' && 'Listening… Pause or press Space to finish.'}
               {appState === 'transcribing' && 'Recognizing…'}
+              {appState === 'speaking' && 'Speaking… Press Space to stop.'}
             </p>
           </div>
         ) : (
