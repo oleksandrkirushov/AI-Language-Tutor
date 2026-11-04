@@ -4,6 +4,8 @@ You speak out loud in the language you are learning → the AI hears you, replie
 and politely corrects your mistakes. It runs in your browser, and speech recognition and the
 language model run on your computer.
 
+<img src="docs/screenshots/conversation.png" alt="A conversation: the tutor replies to two spoken sentences and corrects their grammar" width="520">
+
 Tested in Chrome on macOS. Firefox, Safari, Linux and Windows haven't been tested yet.
 
 ## What it's made of
@@ -56,8 +58,12 @@ Open http://127.0.0.1:8000. The first start also downloads the Whisper model (~5
 1. Click **Turn on microphone** and allow access. Stay quiet for half a second while the page
    measures background noise.
 
+   <img src="docs/screenshots/start.png" alt="The start screen: server status, settings and the Turn on microphone button" width="520">
+
 2. Press **Space** and speak. Recording stops after a pause, or right away if you press
    **Space** again. If you say nothing for 8 seconds, the recording is cancelled.
+
+   <img src="docs/screenshots/listening.png" alt="Recording in progress: the settings are locked and the page says it is listening" width="520">
 
 3. Your words appear, then the tutor's reply, which is also read aloud. Press **Space** to stop
    the voice.
