@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getHealth } from './api.ts'
+import { getHealth } from '../services/api.ts'
 
 export type ServerStatus = 'checking' | 'ready' | 'ollama-down' | 'server-down'
 
