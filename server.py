@@ -1,13 +1,14 @@
 """
-Local HTTP server for the voice language tutor's web interface.
+Local HTTP server for the voice language tutor: the API and the built web page.
 
-Run with `python server.py`. It listens only on 127.0.0.1, so it isn't reachable
-from the network.
+Build the page with `npm run build` in the web folder, then run `python server.py`.
+It listens only on 127.0.0.1, so it isn't reachable from the network.
 """
 
 import contextlib
 import io
 import wave
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -15,6 +16,7 @@ import requests
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
+from fastapi.staticfiles import StaticFiles
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
 
@@ -31,6 +33,7 @@ HOST = "127.0.0.1"
 PORT = 8000
 WHISPER_SIZE = "small"
 OLLAMA_MODEL = "llama3.1"
+WEB_DIST = Path(__file__).parent / "web" / "dist"
 
 
 class ChatMessage(BaseModel):
@@ -49,6 +52,10 @@ class ChatRequest(BaseModel):
 async def lifespan(app: FastAPI):
     print("⏳ Loading the Whisper model (the first time may take a minute)...")
     app.state.whisper_model = WhisperModel(WHISPER_SIZE, device="cpu", compute_type="int8")
+    if WEB_DIST.is_dir():
+        print(f"✅ Ready! Open http://{HOST}:{PORT}")
+    else:
+        print("⚠️  The web page isn't built yet. Run `npm install` and `npm run build` in the web folder.")
     yield
 
 
@@ -102,6 +109,11 @@ async def chat(chat_request: ChatRequest) -> dict:
             "(the 'ollama serve' command or just the open Ollama app).",
         ) from error
     return {"reply": reply}
+
+
+# Mounted after the API routes, so they take priority over the page's files
+if WEB_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=WEB_DIST, html=True), name="web")
 
 
 if __name__ == "__main__":

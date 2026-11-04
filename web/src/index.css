@@ -98,7 +98,38 @@ code {
 }
 
 .conversation {
-  margin-top: 32px;
+  margin-top: 24px;
+}
+
+.settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.settings label {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 14px;
+}
+
+select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 16px;
+}
+
+select:disabled {
+  color: var(--text);
 }
 
 .messages {

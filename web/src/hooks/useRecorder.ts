@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import workletUrl from '../audio/recorder-worklet.ts?worker&url'
-import { CALIBRATION_SECONDS, SilenceDetector, calibrateThreshold } from '../audio/silenceDetector.ts'
+import {
+  CALIBRATION_SECONDS,
+  type RecordingOptions,
+  SilenceDetector,
+  calibrateThreshold,
+} from '../audio/silenceDetector.ts'
 import { toWav } from '../audio/wav.ts'
 
 export type MicState = 'off' | 'starting' | 'calibrating' | 'on'
@@ -18,6 +23,9 @@ function micErrorMessage(error: unknown): string {
     }
     if (error.name === 'NotFoundError') {
       return 'No microphone found. Connect one, then try again.'
+    }
+    if (error.name === 'NotReadableError') {
+      return 'The microphone is busy or unavailable. Close other apps using it, then try again.'
     }
   }
   return 'Could not turn on the microphone.'
@@ -114,7 +122,7 @@ export function useRecorder() {
    * Records until there is a pause or stopRecording is called. Resolves to a 16 kHz,
    * mono, 16-bit WAV, or to null if no voice was ever heard.
    */
-  const recordUntilSilence = useCallback((): Promise<Blob | null> => {
+  const recordUntilSilence = useCallback((options: RecordingOptions): Promise<Blob | null> => {
     return new Promise((resolve, reject) => {
       const mic = microphone.current
       if (!mic) {
@@ -123,7 +131,7 @@ export function useRecorder() {
       }
 
       const { sampleRate } = mic.context
-      const detector = new SilenceDetector(mic.threshold, sampleRate)
+      const detector = new SilenceDetector(mic.threshold, sampleRate, options)
       const chunks: Float32Array[] = []
 
       const finish = () => {

@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 interface SpaceKeyOptions {
   enabled: boolean
   onSpace: () => void
+  onSpaceUp: () => void
   onFocusLost: () => void
 }
 
@@ -17,7 +18,7 @@ function isSpaceShortcut(event: KeyboardEvent): boolean {
   return !isTyping
 }
 
-export function useSpaceKey({ enabled, onSpace, onFocusLost }: SpaceKeyOptions) {
+export function useSpaceKey({ enabled, onSpace, onSpaceUp, onFocusLost }: SpaceKeyOptions) {
   useEffect(() => {
     if (!enabled) {
       return
@@ -37,6 +38,7 @@ export function useSpaceKey({ enabled, onSpace, onFocusLost }: SpaceKeyOptions) 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (isSpaceShortcut(event)) {
         event.preventDefault()
+        onSpaceUp()
       }
     }
 
@@ -49,5 +51,5 @@ export function useSpaceKey({ enabled, onSpace, onFocusLost }: SpaceKeyOptions) 
       window.removeEventListener('keyup', handleKeyUp)
       window.removeEventListener('blur', onFocusLost)
     }
-  }, [enabled, onSpace, onFocusLost])
+  }, [enabled, onSpace, onSpaceUp, onFocusLost])
 }

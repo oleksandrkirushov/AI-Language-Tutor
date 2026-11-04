@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { speakText } from '../audio/speech.ts'
+import { findLanguage, LANGUAGES } from '../languages.ts'
 import { ApiError, type ChatMessage, sendChat, transcribeAudio } from '../services/api.ts'
 import { useRecorder } from './useRecorder.ts'
+import type { Settings } from './useSettings.ts'
 import { useSpaceKey } from './useSpaceKey.ts'
 
 export type AppState = 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
@@ -13,7 +15,11 @@ function errorMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : 'Could not reach the server.'
 }
 
-export function useConversation() {
+export function useConversation(settings: Settings) {
+  const { silenceSeconds, holdToTalk } = settings
+  const target = findLanguage(settings.targetCode) ?? LANGUAGES[0]
+  const native = findLanguage(settings.nativeCode) ?? LANGUAGES[1]
+
   const { micState, micError, enableMicrophone, recordUntilSilence, stopRecording } = useRecorder()
   const [appState, setAppState] = useState<AppState>('idle')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -27,14 +33,17 @@ export function useConversation() {
 
   useEffect(() => stopSpeaking, [stopSpeaking])
 
-  const speakReply = useCallback(async (reply: string) => {
-    setAppState('speaking')
-    const controller = new AbortController()
-    speech.current = controller
-    if (!(await speakText(reply, controller.signal))) {
-      setNotice(SPEECH_FAILED)
-    }
-  }, [])
+  const speakReply = useCallback(
+    async (reply: string) => {
+      setAppState('speaking')
+      const controller = new AbortController()
+      speech.current = controller
+      if (!(await speakText(reply, target, native, controller.signal))) {
+        setNotice(SPEECH_FAILED)
+      }
+    },
+    [native, target],
+  )
 
   const recognize = useCallback(async (wav: Blob): Promise<string> => {
     setAppState('transcribing')
@@ -48,7 +57,7 @@ export function useConversation() {
     setAppState('recording')
 
     try {
-      const wav = await recordUntilSilence()
+      const wav = await recordUntilSilence({ silenceSeconds, stopOnSilence: !holdToTalk })
       const text = wav ? await recognize(wav) : ''
       if (!text) {
         setNotice(NOTHING_HEARD)
@@ -59,7 +68,11 @@ export function useConversation() {
       setMessages(history)
       setAppState('thinking')
 
-      const { reply } = await sendChat({ messages: history }).catch((caught: unknown) => {
+      const { reply } = await sendChat({
+        messages: history,
+        target: target.name,
+        native: native.name,
+      }).catch((caught: unknown) => {
         setMessages(messages) // remove the user's message, since there will be no reply
         throw caught
       })
@@ -70,7 +83,16 @@ export function useConversation() {
     } finally {
       setAppState('idle')
     }
-  }, [messages, recognize, recordUntilSilence, speakReply])
+  }, [
+    holdToTalk,
+    messages,
+    native,
+    recognize,
+    recordUntilSilence,
+    silenceSeconds,
+    speakReply,
+    target,
+  ])
 
   const handleAction = useCallback(() => {
     if (appState === 'idle') {
@@ -82,7 +104,18 @@ export function useConversation() {
     }
   }, [appState, stopRecording, stopSpeaking, takeTurn])
 
-  useSpaceKey({ enabled: micState === 'on', onSpace: handleAction, onFocusLost: stopRecording })
+  const handleSpaceUp = useCallback(() => {
+    if (holdToTalk) {
+      stopRecording()
+    }
+  }, [holdToTalk, stopRecording])
+
+  useSpaceKey({
+    enabled: micState === 'on',
+    onSpace: handleAction,
+    onSpaceUp: handleSpaceUp,
+    onFocusLost: stopRecording,
+  })
 
   return {
     micState,

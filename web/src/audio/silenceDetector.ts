@@ -3,11 +3,15 @@
 const BLOCK_SECONDS = 0.1 // size of the audio chunk we measure loudness on
 const NOISE_MULTIPLIER = 3 // how many times louder than the background a voice must be
 const MIN_THRESHOLD = 200 / 32768 // lower bound of the threshold, so rustling is ignored
-const SILENCE_BLOCKS = 20 // 2 seconds of silence end the recording
 const NO_SPEECH_BLOCKS = 80 // if nothing is said for 8 seconds, cancel the recording
 const MAX_BLOCKS = 600 // recordings stop at 60 seconds
 
 export const CALIBRATION_SECONDS = 0.5
+
+export interface RecordingOptions {
+  silenceSeconds: number // how long a pause ends the recording
+  stopOnSilence: boolean // false while the user holds Space and decides when to stop
+}
 
 /** Returns the voice loudness threshold for a sample of background noise. */
 export function calibrateThreshold(noise: Float32Array): number {
@@ -21,14 +25,18 @@ export class SilenceDetector {
 
   private readonly threshold: number
   private readonly framesPerBlock: number
+  private readonly silenceBlocks: number
+  private readonly stopOnSilence: boolean
   private frames = 0
   private squares = 0
   private blocks = 0
   private silentBlocks = 0
 
-  constructor(threshold: number, sampleRate: number) {
+  constructor(threshold: number, sampleRate: number, options: RecordingOptions) {
     this.threshold = threshold
     this.framesPerBlock = Math.round(BLOCK_SECONDS * sampleRate)
+    this.silenceBlocks = Math.round(options.silenceSeconds / BLOCK_SECONDS)
+    this.stopOnSilence = options.stopOnSilence
   }
 
   /** Feeds in new samples. Returns true once the recording should stop. */
@@ -56,9 +64,7 @@ export class SilenceDetector {
       this.silentBlocks += 1
     }
 
-    return (
-      this.blocks >= MAX_BLOCKS ||
-      this.silentBlocks >= (this.heardSpeech ? SILENCE_BLOCKS : NO_SPEECH_BLOCKS)
-    )
+    const silenceLimit = this.heardSpeech ? this.silenceBlocks : NO_SPEECH_BLOCKS
+    return this.blocks >= MAX_BLOCKS || (this.stopOnSilence && this.silentBlocks >= silenceLimit)
   }
 }

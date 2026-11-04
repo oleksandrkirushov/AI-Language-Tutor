@@ -1,9 +1,12 @@
 import { useEffect } from 'react'
 import { type AppState, useConversation } from '../hooks/useConversation.ts'
+import { useSettings } from '../hooks/useSettings.ts'
+import SettingsPanel from './SettingsPanel.tsx'
 
 function Conversation() {
+  const { settings, updateSettings } = useSettings()
   const { micState, appState, messages, notice, error, enableMicrophone, handleAction } =
-    useConversation()
+    useConversation(settings)
   const isThinking = appState === 'thinking'
   const actionLabels: Partial<Record<AppState, string>> = {
     recording: 'Finish',
@@ -17,6 +20,12 @@ function Conversation() {
 
   return (
     <section className="conversation">
+      <SettingsPanel
+        settings={settings}
+        disabled={appState !== 'idle'}
+        onChange={updateSettings}
+      />
+
       {(messages.length > 0 || isThinking) && (
         <ol className="messages" aria-live="polite">
           {messages.map((message, index) => (
@@ -45,8 +54,12 @@ function Conversation() {
               {actionLabels[appState] ?? 'Start speaking'}
             </button>
             <p role="status" data-state={appState}>
-              {appState === 'idle' && 'Press Space and speak.'}
-              {appState === 'recording' && 'Listening… Pause or press Space to finish.'}
+              {appState === 'idle' &&
+                (settings.holdToTalk ? 'Hold Space while you speak.' : 'Press Space and speak.')}
+              {appState === 'recording' &&
+                (settings.holdToTalk
+                  ? 'Listening… Release Space to finish.'
+                  : 'Listening… Pause or press Space to finish.')}
               {appState === 'transcribing' && 'Recognizing…'}
               {appState === 'speaking' && 'Speaking… Press Space to stop.'}
             </p>
